@@ -1,0 +1,67 @@
+name: Build EPM package
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "master" branch
+  push:
+    branches: [ "master" ]
+    paths-ignore:
+      - '.github/**'
+      - 'README.md'
+  pull_request:
+    branches: [ "master" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      #- name: list available perl modules
+      #  run: |
+      #    perl -MFile::Find=find -MFile::Spec::Functions -Tlw -e 'find { wanted => sub { print canonpath $_ if /\.pm\z/ }, no_chdir => 1 }, @INC'
+      - name: install cpanm and multiple modules
+        uses: perl-actions/install-with-cpanm@v1
+        with:
+          install: |
+            File::MimeInfo
+            Digest::MD5
+            MIME::Base64
+
+      - name: Build EPM
+        id: build_epm
+        run: |
+          ./.github/workflows/build_epm.pl
+
+      - name: Create initial PR
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: Auto-build of EPM
+          committer: GitHub <noreply@github.com>
+          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          branch: autobuild-epm
+          delete-branch: true
+          title: 'Automatic build of EPM file from epmi details and contained files.'
+
+      - name: Rename EPM
+        run: |
+          mv ${{ steps.build_epm.outputs.new_epm_filename }} ${{ steps.build_epm.outputs.old_epm_filename }}
+
+      - name: Update PR
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: Auto-build of EPM
+          committer: GitHub <noreply@github.com>
+          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          branch: autobuild-epm
+          base: master
+          delete-branch: true
+          title: 'Automatic build of EPM file from epmi details and contained files.'
