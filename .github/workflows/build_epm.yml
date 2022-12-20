@@ -42,7 +42,7 @@ jobs:
           ./.github/workflows/build_epm.pl
 
       - name: Create initial PR
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v5-beta
         with:
           commit-message: Auto-build of EPM
           committer: GitHub <noreply@github.com>
