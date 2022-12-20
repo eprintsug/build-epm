@@ -1,0 +1,6 @@
+name: 'Build EPM'
+description: 'Builds epm file from contents of git repo and details in epmi file'
+runs:
+  using: "composite"
+  steps:
+    - uses: ./.github/actions/build_epm
